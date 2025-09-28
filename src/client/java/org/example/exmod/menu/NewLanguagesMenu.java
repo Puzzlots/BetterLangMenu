@@ -16,6 +16,8 @@ import finalforeach.cosmicreach.lang.Lang;
 import finalforeach.cosmicreach.ui.GameStyles;
 import finalforeach.cosmicreach.ui.widgets.CRButton;
 
+import static finalforeach.cosmicreach.FontTexture.getFontTexOfChar;
+
 public class NewLanguagesMenu extends GameState {
 
     TextField searchBar;
@@ -55,9 +57,11 @@ public class NewLanguagesMenu extends GameState {
                         lang.select();
                         updateAllText();
 
-//                        FontTexture.allFontTextures.clear();
-//                        CosmicReachFont.setAllFontsDirty();
-//                        CosmicReachFont.createCosmicReachFont( true);
+                        CosmicReachFont.getFont().dispose();
+                        FontTexture.allFontTextures.clear();
+                        getFontTexOfChar('\n');
+                        CosmicReachFont.setAllFontsDirty();
+
                         refresh();
                     }
 

@@ -25,8 +25,8 @@ public abstract class FontTextureMixin {
     private static IntSet addedFontIndices;
 
     /**
-     * @author
-     * @reason
+     * @author Mr Ollie
+     * @reason because i wanted to
      */
     @Overwrite
     static FontTexture createFontTexture(int unicodeStart, String fileName) {
@@ -38,16 +38,20 @@ public abstract class FontTextureMixin {
         if (fontOverride.containsKey(fileName)){
             fileName = fontOverride.get(fileName);
         }
-        
+
         int index = unicodeStart / 256;
+        System.out.println("Unicode: "+unicodeStart);
         FileHandle fontFile = GameAssetLoader.loadAsset("font/" + fileName);
+        System.out.println("Font file: " + fontFile);
         addedFontIndices.add(index);
         if (fontFile == null) {
             return null;
         } else {
             FontTexture texture = new FontTexture(unicodeStart, fontFile);
+            allFontTextures.remove(index);
             allFontTextures.put(index, texture);
             CosmicReachFont.setAllFontsDirty();
+
             return texture;
         }
     }
