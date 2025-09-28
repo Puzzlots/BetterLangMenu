@@ -1,0 +1,52 @@
+plugins {
+    id "java"
+    id "jigsaw"
+    id 'com.gradleup.shadow'
+}
+
+loom {
+    splitEnvironmentSourceSets()
+    mods {
+        "${id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+    accessWidenerPath = file("src/main/resources/${id}.manipulator")
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    cosmicReach("finalforeach:cosmicreach:${cosmic_reach_version}")
+}
+
+processResources {
+    // Locations of where to inject the properties
+    def resourceTargets = [ "puzzle.mod.json" ]
+
+
+    // Left item is the name in the target, right is the variable name
+    def replaceProperties = [
+            "mod_version"     : version,
+            "mod_desc"        : desc,
+            "mod_name"        : project.name,
+            "mod_id"          : id,
+            "cosmic_reach"    : cosmic_reach_version,
+            "cosmic_reach_minimum"    : cosmic_reach_minimum_version,
+            "puzzle_loader_cosmic"    : puzzle_cosmic_version,
+            "puzzle_loader_core"      : puzzle_core_version
+    ]
+
+
+    inputs.properties replaceProperties
+    replaceProperties.put "project", project
+    filesMatching(resourceTargets) {
+        expand replaceProperties
+    }
+}
