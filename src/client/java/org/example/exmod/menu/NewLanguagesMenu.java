@@ -8,8 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import finalforeach.cosmicreach.CosmicReachFont;
-import finalforeach.cosmicreach.FontTexture;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.MainMenu;
 import finalforeach.cosmicreach.lang.Lang;
@@ -55,19 +53,16 @@ public class NewLanguagesMenu extends GameState {
                         lang.select();
                         updateAllText();
 
-//                        FontTexture.allFontTextures.clear();
-//                        CosmicReachFont.setAllFontsDirty();
-//                        CosmicReachFont.createCosmicReachFont( true);
                         refresh();
                     }
 
                     @Override
                     public void updateText() {
                         super.updateText();
-                        this.enabledColor = lang.isCurrentLanguage() ? Color.GOLD : Color.WHITE;
+                        this.setTextColor(lang.isCurrentLanguage() ? Color.GOLD : Color.WHITE);
                     }
                 };
-                selectLangButton.enabledColor = lang.isCurrentLanguage() ? Color.GOLD : Color.WHITE;
+                ((LangButton) selectLangButton).setTextColor(lang.isCurrentLanguage() ? Color.GOLD : Color.WHITE);
                 this.langButtonsTable.add(selectLangButton).width(250.0F).height(50.0F).pad(16.0F);
                 if (i >= 2){
                     this.langButtonsTable.row();
