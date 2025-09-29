@@ -1,22 +1,33 @@
 package org.example.exmod.menu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import finalforeach.cosmicreach.CosmicReachFont;
 import finalforeach.cosmicreach.FontTexture;
+import finalforeach.cosmicreach.GameAssetLoader;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.MainMenu;
 import finalforeach.cosmicreach.lang.Lang;
 import finalforeach.cosmicreach.ui.GameStyles;
 import finalforeach.cosmicreach.ui.widgets.CRButton;
+import org.example.exmod.LangMore;
+import org.example.exmod.mixins.FontTextureMixin;
 
-import static finalforeach.cosmicreach.FontTexture.getFontTexOfChar;
+import java.util.Map;
+
+import static finalforeach.cosmicreach.FontTexture.allFontTextures;
 
 public class NewLanguagesMenu extends GameState {
 
@@ -57,10 +68,7 @@ public class NewLanguagesMenu extends GameState {
                         lang.select();
                         updateAllText();
 
-                        CosmicReachFont.getFont().dispose();
-                        FontTexture.allFontTextures.clear();
-                        getFontTexOfChar('\n');
-                        CosmicReachFont.setAllFontsDirty();
+                        reloadAllBlocks();
 
                         refresh();
                     }
@@ -83,6 +91,104 @@ public class NewLanguagesMenu extends GameState {
         }
 
     }
+
+    public static void reloadAllBlocks() {
+        for (IntMap.Entry<FontTexture> entry : allFontTextures.entries()) {
+            FontTexture block = entry.value;
+            if (block == null) continue;
+
+            int unicodeStart = block.unicodeStart;
+            String fileName;
+
+            // Infer filename from unicodeStart
+            switch (unicodeStart) {
+                case 0 -> fileName = "cosmic-reach-font-0000-basic.png";
+                case 256 -> fileName = "cosmic-reach-font-0100-extended-A.png";
+                case 512 -> fileName = "cosmic-reach-font-0200.png";
+                case 768 -> fileName = "cosmic-reach-font-0300-diacritics-greek-coptic.png";
+                case 1024 -> fileName = "cosmic-reach-font-0400-cyrillic.png";
+                case 12288 -> fileName = "cosmic-reach-font-3000-kana.png";
+                default -> fileName = "cosmic-reach-font-" +
+                        Integer.toHexString(unicodeStart).toUpperCase() + ".png";
+            }
+
+            FileHandle fontFile = GameAssetLoader.loadAsset("font/" + fileName);
+            if (fontFile == null) {
+                System.err.println("Missing font file for unicodeStart=" + unicodeStart + " (" + fileName + ")");
+                continue;
+            }
+
+            // Begin old reloadBlock logic inline
+            Texture newTex = new Texture(fontFile);
+            int numCols = 16;
+            int numRows = 16;
+
+            TextureRegion[][] tr = TextureRegion.split(
+                    newTex,
+                    newTex.getWidth() / numCols,
+                    newTex.getHeight() / numRows
+            );
+
+            TextureData texData = newTex.getTextureData();
+            texData.prepare();
+            Pixmap pix = texData.consumePixmap();
+
+            for (int i = 0; i < numCols; i++) {
+                for (int j = 0; j < numRows; j++) {
+                    int idx = j * numRows + i;
+                    TextureRegion texReg = tr[j][i];
+
+                    block.fontTextureRegions[idx].setRegion(texReg);
+
+                    int maxBoundsX = texReg.getRegionX();
+                    int maxBoundsY = texReg.getRegionY();
+                    int minBoundsX = texReg.getRegionX() + texReg.getRegionWidth();
+                    int minBoundsY = texReg.getRegionY() + texReg.getRegionHeight();
+                    boolean isFullyTransparent = true;
+
+                    for (int px = texReg.getRegionX(); px < texReg.getRegionX() + texReg.getRegionWidth(); ++px) {
+                        for (int py = texReg.getRegionY(); py < texReg.getRegionY() + texReg.getRegionHeight(); ++py) {
+                            int pixColor = pix.getPixel(px, py);
+                            boolean isTransparentPixel = (pixColor & 255) == 0;
+                            if (!isTransparentPixel) {
+                                minBoundsX = Math.min(minBoundsX, px);
+                                minBoundsY = Math.min(minBoundsY, py);
+                                maxBoundsX = Math.max(maxBoundsX, px);
+                                maxBoundsY = Math.max(maxBoundsY, py);
+                                isFullyTransparent = false;
+                            }
+                        }
+                    }
+
+                    block.fontCharStartPos[idx].set((float) minBoundsX, (float) minBoundsY);
+                    block.fontCharSizes[idx].set(
+                            (float) Math.max(0, maxBoundsX - minBoundsX + 1),
+                            (float) Math.max(0, maxBoundsY - minBoundsY + 1)
+                    );
+
+                    if (isFullyTransparent) {
+                        block.fontCharStartPos[idx].set(texReg.getRegionX(), texReg.getRegionY());
+                        block.fontCharSizes[idx].set(texReg.getRegionWidth(), texReg.getRegionHeight());
+                    }
+
+                    texReg.flip(false, true);
+                }
+            }
+
+            pix.dispose();
+
+            if (block.fontTexture != null) {
+                block.fontTexture.dispose();
+            }
+            block.fontTexture = newTex;
+            // End old reloadBlock logic inline
+        }
+
+        // Rebuild the global font atlas once
+        CosmicReachFont.setAllFontsDirty();
+        System.out.println("Reloaded all font blocks fully inline.");
+    }
+
 
     public void refresh(){
         this.stage.clear();
@@ -163,6 +269,7 @@ public class NewLanguagesMenu extends GameState {
         this.stage.addActor(layoutTable);
     }
 
+
     public void create() {
         super.create();
         this.stage.clear();
@@ -203,3 +310,4 @@ public class NewLanguagesMenu extends GameState {
 
     }
 }
+

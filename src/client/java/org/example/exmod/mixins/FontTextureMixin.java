@@ -1,6 +1,11 @@
 package org.example.exmod.mixins;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.IntSet;
 import finalforeach.cosmicreach.CosmicReachFont;
@@ -11,6 +16,7 @@ import org.example.exmod.LangMore;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Map;
 
@@ -24,37 +30,37 @@ public abstract class FontTextureMixin {
     @Shadow
     private static IntSet addedFontIndices;
 
+    @Shadow public int unicodeStart;
+    @Shadow public Texture fontTexture;
+    @Shadow TextureRegion[] fontTextureRegions;
+    @Shadow Vector2[] fontCharStartPos;
+    @Shadow Vector2[] fontCharSizes;
+
     /**
-     * @author Mr Ollie
-     * @reason because i wanted to
+     * @author Ollie
+     * @reason because he wanted to
      */
     @Overwrite
     static FontTexture createFontTexture(int unicodeStart, String fileName) {
 
         LangMore lang =  (LangMore) Lang.currentLang;
-
         Map<String , String> fontOverride = lang.getFontOverride();
-
-        if (fontOverride.containsKey(fileName)){
-            fileName = fontOverride.get(fileName);
-        }
+        fileName = fontOverride.getOrDefault(fileName, fileName);
 
         int index = unicodeStart / 256;
-        System.out.println("Unicode: "+unicodeStart);
         FileHandle fontFile = GameAssetLoader.loadAsset("font/" + fileName);
-        System.out.println("Font file: " + fontFile);
         addedFontIndices.add(index);
+
         if (fontFile == null) {
             return null;
         } else {
             FontTexture texture = new FontTexture(unicodeStart, fontFile);
-            allFontTextures.remove(index);
             allFontTextures.put(index, texture);
             CosmicReachFont.setAllFontsDirty();
-
             return texture;
         }
     }
+
 
     /*
     public void swapTexture(FileHandle newFontFile) {
@@ -69,33 +75,5 @@ public abstract class FontTextureMixin {
     }
     this.fontTexture = newTex;
 }*/
-
-    /**
-     * @author I and I
-     * @reason Overwriting font texture
-     */
-//    @Overwrite
-//    public static FontTexture getFontTexOfChar(char c) {
-//        int fontIndex = c / 256;
-//        FontTexture t = (FontTexture)allFontTextures.get(fontIndex);
-//        if (t == null && !addedFontIndices.contains(fontIndex)) {
-//            int unicodeStart = fontIndex * 256;
-//            String var10000;
-//            switch (unicodeStart) {
-//                case 0 -> var10000 = "cosmic-reach-font-0000-basic.png";
-//                case 256 -> var10000 = "cosmic-reach-font-0100-extended-A.png";
-//                case 512 -> var10000 = "cosmic-reach-font-0200.png";
-//                case 768 -> var10000 = "cosmic-reach-font-0300-diacritics-greek-coptic.png";
-//                case 1024 -> var10000 = "cosmic-reach-font-0400-cyrillic.png";
-//                case 12288 -> var10000 = "cosmic-reach-font-3000-kana.png";
-//                default -> var10000 = "cosmic-reach-font-" + Integer.toHexString(unicodeStart).toUpperCase() + ".png";
-//            }
-//
-//            String fontName = var10000;
-//            createFontTexture(unicodeStart, fontName);
-//        }
-//
-//        return t;
-//    }
 
 }

@@ -9,12 +9,6 @@
     "icon": "${mod_id}:icons/icon.png"
   },
   "entrypoints": {
-    "init": [
-      "org.example.exmod.ExampleMod"
-    ],
-    "client-init": [
-      "org.example.exmod.ClientInitializer"
-    ]
   },
   "depends": {
     "cosmic-reach": ">=${cosmic_reach_minimum}"
