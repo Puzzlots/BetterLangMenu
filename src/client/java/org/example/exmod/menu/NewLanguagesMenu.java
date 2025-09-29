@@ -178,7 +178,7 @@ public class NewLanguagesMenu extends GameState {
     public void render() {
         super.render();
         this.stage.act();
-        ScreenUtils.clear(0.145F, 0.078F, 0.153F, 1.0F, true);
+        ScreenUtils.clear(0, 0, 0F, 1.0F, true);
         Gdx.gl.glEnable(3042);
         Gdx.gl.glBlendFunc(770, 771);
         Gdx.gl.glDepthFunc(513);
