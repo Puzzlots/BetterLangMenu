@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -68,7 +69,7 @@ public class NewLanguagesMenu extends GameState {
                         lang.select();
                         updateAllText();
 
-                        reloadAllBlocks();
+                        reloadAllBlocks(); //here
 
                         refresh();
                     }
@@ -100,7 +101,6 @@ public class NewLanguagesMenu extends GameState {
             int unicodeStart = block.unicodeStart;
             String fileName;
 
-            // Infer filename from unicodeStart
             switch (unicodeStart) {
                 case 0 -> fileName = "cosmic-reach-font-0000-basic.png";
                 case 256 -> fileName = "cosmic-reach-font-0100-extended-A.png";
@@ -112,22 +112,30 @@ public class NewLanguagesMenu extends GameState {
                         Integer.toHexString(unicodeStart).toUpperCase() + ".png";
             }
 
+            LangMore lang =  (LangMore) Lang.currentLang;
+            Map<String , String> fontOverride = lang.getFontOverride();
+            fileName = fontOverride.getOrDefault(fileName, fileName);
+
             FileHandle fontFile = GameAssetLoader.loadAsset("font/" + fileName);
             if (fontFile == null) {
                 System.err.println("Missing font file for unicodeStart=" + unicodeStart + " (" + fileName + ")");
                 continue;
-            }
+            } //what am i sending you?
 
-            // Begin old reloadBlock logic inline
+
+            // --- Begin live-safe reload logic ---
             Texture newTex = new Texture(fontFile);
             int numCols = 16;
             int numRows = 16;
-
-            TextureRegion[][] tr = TextureRegion.split(
+            TextureRegion[][] splitRegions = TextureRegion.split(
                     newTex,
                     newTex.getWidth() / numCols,
                     newTex.getHeight() / numRows
             );
+
+            TextureRegion[] newRegions = new TextureRegion[numCols * numRows];
+            Vector2[] newCharStart = new Vector2[newRegions.length];
+            Vector2[] newCharSizes = new Vector2[newRegions.length];
 
             TextureData texData = newTex.getTextureData();
             texData.prepare();
@@ -135,59 +143,56 @@ public class NewLanguagesMenu extends GameState {
 
             for (int i = 0; i < numCols; i++) {
                 for (int j = 0; j < numRows; j++) {
-                    int idx = j * numRows + i;
-                    TextureRegion texReg = tr[j][i];
+                    int idx = j * numCols + i;
+                    TextureRegion texReg = splitRegions[j][i];
 
-                    block.fontTextureRegions[idx].setRegion(texReg);
+                    int maxX = texReg.getRegionX();
+                    int maxY = texReg.getRegionY();
+                    int minX = texReg.getRegionX() + texReg.getRegionWidth();
+                    int minY = texReg.getRegionY() + texReg.getRegionHeight();
+                    boolean fullyTransparent = true;
 
-                    int maxBoundsX = texReg.getRegionX();
-                    int maxBoundsY = texReg.getRegionY();
-                    int minBoundsX = texReg.getRegionX() + texReg.getRegionWidth();
-                    int minBoundsY = texReg.getRegionY() + texReg.getRegionHeight();
-                    boolean isFullyTransparent = true;
-
-                    for (int px = texReg.getRegionX(); px < texReg.getRegionX() + texReg.getRegionWidth(); ++px) {
-                        for (int py = texReg.getRegionY(); py < texReg.getRegionY() + texReg.getRegionHeight(); ++py) {
+                    for (int px = texReg.getRegionX(); px < texReg.getRegionX() + texReg.getRegionWidth(); px++) {
+                        for (int py = texReg.getRegionY(); py < texReg.getRegionY() + texReg.getRegionHeight(); py++) {
                             int pixColor = pix.getPixel(px, py);
-                            boolean isTransparentPixel = (pixColor & 255) == 0;
-                            if (!isTransparentPixel) {
-                                minBoundsX = Math.min(minBoundsX, px);
-                                minBoundsY = Math.min(minBoundsY, py);
-                                maxBoundsX = Math.max(maxBoundsX, px);
-                                maxBoundsY = Math.max(maxBoundsY, py);
-                                isFullyTransparent = false;
+                            if ((pixColor & 255) != 0) {
+                                minX = Math.min(minX, px);
+                                minY = Math.min(minY, py);
+                                maxX = Math.max(maxX, px);
+                                maxY = Math.max(maxY, py);
+                                fullyTransparent = false;
                             }
                         }
                     }
 
-                    block.fontCharStartPos[idx].set((float) minBoundsX, (float) minBoundsY);
-                    block.fontCharSizes[idx].set(
-                            (float) Math.max(0, maxBoundsX - minBoundsX + 1),
-                            (float) Math.max(0, maxBoundsY - minBoundsY + 1)
-                    );
+                    newRegions[idx] = new TextureRegion(texReg);
+                    newRegions[idx].flip(false, true);
 
-                    if (isFullyTransparent) {
-                        block.fontCharStartPos[idx].set(texReg.getRegionX(), texReg.getRegionY());
-                        block.fontCharSizes[idx].set(texReg.getRegionWidth(), texReg.getRegionHeight());
-                    }
-
-                    texReg.flip(false, true);
+                    newCharStart[idx] = new Vector2(fullyTransparent ? texReg.getRegionX() : minX,
+                            fullyTransparent ? texReg.getRegionY() : minY);
+                    newCharSizes[idx] = new Vector2(fullyTransparent ? texReg.getRegionWidth() : maxX - minX + 1,
+                            fullyTransparent ? texReg.getRegionHeight() : maxY - minY + 1);
                 }
             }
 
             pix.dispose();
 
-            if (block.fontTexture != null) {
-                block.fontTexture.dispose();
-            }
+            // Dispose old texture safely
+            if (block.fontTexture != null) block.fontTexture.dispose();
+
+            // Atomically replace old arrays with new ones
             block.fontTexture = newTex;
-            // End old reloadBlock logic inline
+            block.fontTextureRegions = newRegions;
+            block.fontCharStartPos = newCharStart;
+            block.fontCharSizes = newCharSizes;
+            // --- End live-safe reload logic ---
         }
 
-        // Rebuild the global font atlas once
+        // Rebuild the combined font atlas after all blocks are reloaded
         CosmicReachFont.setAllFontsDirty();
-        System.out.println("Reloaded all font blocks fully inline.");
+        System.out.println("Reloaded all font blocks safely.");
     }
+
 
 
     public void refresh(){

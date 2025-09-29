@@ -30,12 +30,6 @@ public abstract class FontTextureMixin {
     @Shadow
     private static IntSet addedFontIndices;
 
-    @Shadow public int unicodeStart;
-    @Shadow public Texture fontTexture;
-    @Shadow TextureRegion[] fontTextureRegions;
-    @Shadow Vector2[] fontCharStartPos;
-    @Shadow Vector2[] fontCharSizes;
-
     /**
      * @author Ollie
      * @reason because he wanted to
