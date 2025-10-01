@@ -3,6 +3,7 @@
   "metadata": {
     "name": "English (United States)",
     "override": {
+      "cosmic-reach-font-0400-cyrillic.png": "cosmic-reach-font-0000-basic.png",
       "cosmic-reach-font-0000-basic.png": "cosmic-reach-font-0400-cyrillic.png"
     }
   },

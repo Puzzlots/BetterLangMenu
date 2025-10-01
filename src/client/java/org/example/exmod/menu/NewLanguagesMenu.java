@@ -120,7 +120,7 @@ public class NewLanguagesMenu extends GameState {
             if (fontFile == null) {
                 System.err.println("Missing font file for unicodeStart=" + unicodeStart + " (" + fileName + ")");
                 continue;
-            } //what am i sending you?
+            } 
 
 
             // --- Begin live-safe reload logic ---

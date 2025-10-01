@@ -1,7 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/FinalForEach/Cosmic-Reach-Localization/master/assets/base/lang/game.schema.json",
   "metadata": {
-    "name": "Cymraeg"
+    "name": "Cymraeg",
+    "override": {
+      "cosmic-reach-font-0000-basic.png": "cosmic-reach-font-0400-cyrillic.png"
+    }
   },
   "formatPercent": "#%",
   "startButton": "Chwaraewr Sengl",
