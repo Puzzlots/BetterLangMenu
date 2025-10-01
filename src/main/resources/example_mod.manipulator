@@ -1,0 +1,5 @@
+public method finalforeach/cosmicreach/CosmicReachFont updateCosmicReachFont (Lfinalforeach/cosmicreach/CosmicReachFont;Z)Lfinalforeach/cosmicreach/CosmicReachFont;
+public field finalforeach/cosmicreach/FontTexture fontTextureRegions
+public field finalforeach/cosmicreach/FontTexture fontCharStartPos
+public field finalforeach/cosmicreach/FontTexture fontCharSizes
+public method finalforeach/cosmicreach/FontTexture createFontTexture (ILjava/lang/String;)Lfinalforeach/cosmicreach/FontTexture;

@@ -5,6 +5,8 @@ import finalforeach.cosmicreach.ui.widgets.CRButton;
 
 
 /**
+ * @author Crabking
+ * @reason to update the text on the button when we reload the lang and font,
  * we would like this added to CRButton :)
  */
 public class LangButton extends CRButton {
@@ -20,6 +22,7 @@ public class LangButton extends CRButton {
         this.enabledColor = color;
     }
 
+    // Crab insisted on keeping this
     public void setDisabledTextColor(Color color){
         this.disabledColor = color;
     }
