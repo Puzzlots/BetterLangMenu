@@ -3,3 +3,6 @@ public field finalforeach/cosmicreach/FontTexture fontTextureRegions
 public field finalforeach/cosmicreach/FontTexture fontCharStartPos
 public field finalforeach/cosmicreach/FontTexture fontCharSizes
 public method finalforeach/cosmicreach/FontTexture createFontTexture (ILjava/lang/String;)Lfinalforeach/cosmicreach/FontTexture;
+public field finalforeach/cosmicreach/CosmicReachFont allFonts
+public field finalforeach/cosmicreach/CosmicReachFont fontCaches
+public field finalforeach/cosmicreach/CosmicReachFont FONT

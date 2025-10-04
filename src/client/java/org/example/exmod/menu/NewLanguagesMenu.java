@@ -20,6 +20,9 @@ import finalforeach.cosmicreach.ui.widgets.CRButton;
 import finalforeach.cosmicreach.world.Sky;
 import org.example.exmod.TextureReloader;
 
+import static org.example.exmod.TextureReloader.disposeBitmapFonts;
+
+
 /**
  * @author Crabking, Spicylemon, YOU we stole from WorldSelectionMenu
  */
@@ -63,8 +66,9 @@ public class NewLanguagesMenu extends GameState {
                         lang.select();
                         updateAllText();
 
+                        disposeBitmapFonts();
                         TextureReloader.reloadAllFontTextures(); //<- very important, does what the name says (with overrided fonts)
-
+                        
                         refresh();
                     }
 

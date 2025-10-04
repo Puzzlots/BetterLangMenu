@@ -1,8 +1,14 @@
 package org.example.exmod;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.utils.IntMap;
 import finalforeach.cosmicreach.CosmicReachFont;
 import finalforeach.cosmicreach.FontTexture;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class TextureReloader {
 
@@ -18,7 +24,7 @@ public class TextureReloader {
             String fileName = getFontFileName(unicodeStart);
 
             if (block.fontTexture != null) block.fontTexture.dispose();
-            var text = FontTexture.createFontTexture(unicodeStart,fileName);
+            FontTexture text = FontTexture.createFontTexture(unicodeStart,fileName);
             entry.value.fontTexture = text.fontTexture;
             entry.value.fontTextureRegions = text.fontTextureRegions;
             entry.value.fontCharStartPos = text.fontCharStartPos;
@@ -26,6 +32,36 @@ public class TextureReloader {
         }
 
         CosmicReachFont.setAllFontsDirty();
+
+    }
+
+    public static void disposeBitmapFonts() {
+        for (CosmicReachFont font : CosmicReachFont.allFonts) {
+            if (font == null) continue;
+
+            for (var fontCache : font.fontCaches) {
+                if (fontCache == null) continue;
+                if (fontCache.get() != null) {
+                    fontCache.get().clear();
+                }
+                fontCache.clear();
+            }
+            font.fontCaches.clear();
+            font.fontCaches = null;
+            font.dispose();
+            font.getCache().clear();
+            try {
+                Field shit = Class.forName(BitmapFont.class.getName()).getDeclaredField("cache");
+                Method method = Class.forName(BitmapFont.class.getName()).getDeclaredMethod("newFontCache");
+                shit.setAccessible(true);
+                method.setAccessible(true);
+                shit.set(font, method.invoke(font));
+            } catch (NoSuchFieldException | ClassNotFoundException | IllegalAccessException |
+                     InvocationTargetException | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        System.gc();
     }
 
 
