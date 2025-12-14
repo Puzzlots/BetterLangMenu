@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import finalforeach.cosmicreach.gamestates.GameState;
@@ -30,20 +31,21 @@ public class NewLanguagesMenu extends GameState {
     private float oldScrollPos = 0;
     private Camera starCamera;
 
-    public void updateAllText(Array<Actor> actors){
-        for (Actor actor : actors){
+    public void updateAllText(){
+        Array<Actor> actors = new Array<>();
+        actors.addAll(stage.getActors());
+
+        while (actors.notEmpty()) {
+            Actor actor = actors.pop();
+
             if (actor instanceof LangButton langButton) {
                 langButton.updateText();
-            } else if (actor instanceof Table table) {
-                updateAllText(table.getChildren());
-            } else if (actor instanceof ScrollPane scrollPane) {
-                updateAllText(scrollPane.getChildren());
+            }
+
+            if (actor instanceof Group group) {
+                actors.addAll(group.getChildren());
             }
         }
-    }
-
-    public void updateAllText(){
-        updateAllText(this.stage.getActors());
     }
 
     public void setupLangList() {
