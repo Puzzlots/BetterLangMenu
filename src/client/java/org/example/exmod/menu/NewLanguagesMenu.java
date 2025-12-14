@@ -1,7 +1,10 @@
 package org.example.exmod.menu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -11,8 +14,10 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.MainMenu;
 import finalforeach.cosmicreach.lang.Lang;
+import finalforeach.cosmicreach.settings.GraphicsSettings;
 import finalforeach.cosmicreach.ui.GameStyles;
 import finalforeach.cosmicreach.ui.widgets.CRButton;
+import finalforeach.cosmicreach.world.Sky;
 
 public class NewLanguagesMenu extends GameState {
 
@@ -23,6 +28,7 @@ public class NewLanguagesMenu extends GameState {
     Table langButtonsTable = new Table();
     private String oldSearch = "";
     private float oldScrollPos = 0;
+    private Camera starCamera;
 
     public void updateAllText(Array<Actor> actors){
         for (Actor actor : actors){
@@ -157,6 +163,9 @@ public class NewLanguagesMenu extends GameState {
     public void create() {
         super.create();
         this.stage.clear();
+        this.starCamera = new PerspectiveCamera(GraphicsSettings.fieldOfView.getValue(), (float)Gdx.graphics.getWidth(), (float)Gdx.graphics.getHeight());
+        this.starCamera.near = 0.1F;
+        this.starCamera.far = 2500.0F;
         Lang.loadLanguages(true);
         this.Langs = Lang.getLanguages();
 
@@ -179,11 +188,14 @@ public class NewLanguagesMenu extends GameState {
         super.render();
         this.stage.act();
         ScreenUtils.clear(0, 0, 0F, 1.0F, true);
+
         Gdx.gl.glEnable(3042);
         Gdx.gl.glBlendFunc(770, 771);
         Gdx.gl.glDepthFunc(513);
         Gdx.gl.glEnable(2929);
         Gdx.gl.glDisable(2884);
+        Sky.SPACE_DAY.drawSky(this.starCamera);
+        this.starCamera.rotate(Vector3.Z, Gdx.graphics.getDeltaTime() * 0.25F);
         this.stage.draw();
         Gdx.gl.glCullFace(1029);
         Gdx.gl.glEnable(2884);
